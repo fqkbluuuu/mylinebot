@@ -33,16 +33,48 @@ def handle_message(event):
     user_text = event.message.text.strip()
 
     # --- 天氣查詢邏輯 ---
-    if "台北" in user_text:
+    if "基隆" in user_text:
+        reply_text = "【基隆天氣】今日陰雨綿綿，氣溫 20~24°C，出門記得帶傘。"
+    elif "台北" in user_text:
         reply_text = "【台北天氣】今日多雲短暫雨，氣溫 22~26°C，出門記得帶傘喔！"
+    elif "新北" in user_text:
+        reply_text = "【新北天氣】今日多雲時陰，氣溫 21~26°C，局部地區有雨。"
+    elif "桃園" in user_text:
+        reply_text = "【桃園天氣】今日多雲時晴，氣溫 21~26°C，午後風勢較大。"
     elif "新竹" in user_text:
         reply_text = "【新竹天氣】今日晴時多雲，風力較強，氣溫 21~25°C，注意保暖！"
+    elif "苗栗" in user_text:
+        reply_text = "【苗栗天氣】今日多雲時晴，氣溫 21~27°C，舒適宜人。"
     elif "台中" in user_text:
         reply_text = "【台中天氣】今日晴朗舒適，氣溫 23~28°C，非常適合出遊！"
+    elif "彰化" in user_text:
+        reply_text = "【彰化天氣】今日晴到多雲，氣溫 22~27°C，風力稍大。"
+    elif "南投" in user_text:
+        reply_text = "【南投天氣】今日多雲午後短暫陣雨，氣溫 20~27°C。"
+    elif "雲林" in user_text:
+        reply_text = "【雲林天氣】今日晴時多雲，氣溫 22~28°C，天氣穩定。"
+    elif "嘉義" in user_text:
+        reply_text = "【嘉義天氣】今日晴朗穩定，氣溫 22~28°C，陽光普照。"
+    elif "台南" in user_text:
+        reply_text = "【台南天氣】今日晴朗穩定，氣溫 24~29°C，溫暖舒適。"
     elif "高雄" in user_text:
         reply_text = "【高雄天氣】今日多雲到晴，氣溫 25~30°C，白天感受偏熱！"
+    elif "屏東" in user_text:
+        reply_text = "【屏東天氣】今日多雲時晴，氣溫 24~30°C，午後天氣炎熱。"
+    elif "宜蘭" in user_text:
+        reply_text = "【宜蘭天氣】今日陰時多雲短暫雨，氣溫 21~25°C，出門記得攜帶雨具。"
+    elif "花蓮" in user_text:
+        reply_text = "【花蓮天氣】今日多雲短暫雨，氣溫 22~26°C。"
+    elif "台東" in user_text:
+        reply_text = "【台東天氣】今日多雲時晴，氣溫 23~27°C，天氣舒適。"
+    elif "澎湖" in user_text:
+        reply_text = "【澎湖天氣】今日多雲，風浪較大，氣溫 23~26°C。"
+    elif "金門" in user_text:
+        reply_text = "【金門天氣】今日晴時多雲，早晚偏涼，氣溫 20~25°C。"
+    elif "馬祖" in user_text:
+        reply_text = "【馬祖天氣】今日多雲時陰，氣溫 18~22°C，注意保暖。"
     elif "天氣" in user_text:
-        reply_text = "【天氣小幫手】請輸入具體縣市（例如：台北天氣、新竹天氣）來查詢詳細天氣喔！"
+        reply_text = "【天氣小幫手】你可以直接輸入想查詢的縣市（例如：新竹天氣、苗栗天氣）來查看喔！"
 
     # --- 星座運勢邏輯 ---
     elif "牡羊" in user_text:
