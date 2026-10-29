@@ -46,9 +46,9 @@ def scheduled_push_to_everyone():
         except Exception as e:
             print(f"推播給 {uid} 失敗: {e}")
 
-# 設定背景排程器（每 1 小時執行一次）
+# 設定背景排程器（每 10秒 執行一次）
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=scheduled_push_to_everyone, trigger="interval", hours=1)
+scheduler.add_job(func=scheduled_push_to_everyone, trigger="interval", seconds=10)
 scheduler.start()
 
 
