@@ -27,7 +27,7 @@ def save_user_id(user_id):
             for uid in user_ids:
                 f.write(uid + '\n')
 
-# 2. 定時推播給「所有加過好友的人」的函數
+# 2. 定時推播給「所有加過好友的人」的函數（已改為幸運的一天與多喝水提醒）
 def scheduled_push_to_everyone():
     if not os.path.exists(USER_IDS_FILE):
         print("目前沒有任何使用者記錄！")
@@ -40,15 +40,15 @@ def scheduled_push_to_everyone():
         try:
             line_bot_api.push_message(
                 uid,
-                TextSendMessage(text="【每日定時推播】早安！今天也是美好的一天，記得關心天氣與星座運勢喔！☀️")
+                TextSendMessage(text="🍀【貼心小提醒】今天是充滿幸運的一天！忙歸忙，記得隨時補充水分、多喝水保持好狀態喔！💧✨")
             )
             print(f"成功推播給使用者: {uid}")
         except Exception as e:
             print(f"推播給 {uid} 失敗: {e}")
 
-# 設定背景排程器（目前設定每 10 秒測試用，等確定會動後可以改成每天早上固定時間）
+# 設定背景排程器（每 1 小時執行一次）
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=scheduled_push_to_everyone, trigger="interval", seconds=10)
+scheduler.add_job(func=scheduled_push_to_everyone, trigger="interval", hours=1)
 scheduler.start()
 
 
@@ -119,7 +119,7 @@ def handle_message(event):
     elif "處女" in user_text:
         reply_text = "【處女座運勢】今日運勢 ★★★★☆！細心度滿分，工作效率特別高。"
     elif "天秤" in user_text:
-        reply_text = "【天秤座運勢】今日運勢 ★★★☆☆！人際關係和諧，適合參加聚會。"
+        reply_text = "【處女座運勢】今日運勢 ★★★☆☆！人際關係和諧，適合參加聚會。"
     elif "天蠍" in user_text:
         reply_text = "【天蠍座運勢】今日運勢 ★★★★★！直覺敏銳，做決定時相信自己的第一直覺！"
     elif "射手" in user_text:
