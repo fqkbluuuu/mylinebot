@@ -3,36 +3,65 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-# TODO: 填入你在 LINE Developers 後台拿到金鑰
+# 填入你的 LINE Channel Access Token 與 Secret
 line_bot_api = LineBotApi('C6I5XayRb3R/QnjXtluHlWholOOv1KUzObEKcbI99VhIZ84CHFE7p3GgRnv1yGY/P7NHHwsShXLEgWGrVoqmc5GvyK4gkaOpWHXM3lDqHeWs4bxyhssC1nfg7E+CuWZIb6BIwGox9hqYhAAFw+PgtwdB04t89/1O/w1cDnyilFU=')
 handler = WebhookHandler('c7f6afa59cf241e8be7d81d37c098ae8')
 
-@app.route("/callback", methods=['POST'])
-def callback():
-    # 取得 signature 驗證標頭
-    signature = request.headers['X-Line-Signature']
+# 用來儲存所有加過好友/傳訊息者的 ID 檔案
+USER_IDS_FILE = 'users.txt'
 
-    # 取得請求內容本文
-    body = request.get_data(as_text=True)
-    app.logger.info("Request body: " + body)
+# 1. 自動儲存使用者 ID 的函數
+def save_user_id(user_id):
+    user_ids = set()
+    if os.path.exists(USER_IDS_FILE):
+        with open(USER_IDS_FILE, 'r', encoding='utf-8') as f:
+            user_ids = set(line.strip() for line in f if line.strip())
+    
+    if user_id not in user_ids:
+        user_ids.add(user_id)
+        with open(USER_IDS_FILE, 'w', encoding='utf-8') as f:
+            for uid in user_ids:
+                f.write(uid + '\n')
 
-    # 驗證簽章並處理訊息
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        abort(400)
+# 2. 定時推播給「所有加過好友的人」的函數
+def scheduled_push_to_everyone():
+    if not os.path.exists(USER_IDS_FILE):
+        print("目前沒有任何使用者記錄！")
+        return
 
-    return 'OK'
+    with open(USER_IDS_FILE, 'r', encoding='utf-8') as f:
+        user_ids = [line.strip() for line in f if line.strip()]
 
-# 處理使用者傳來的文字訊息
+    for uid in user_ids:
+        try:
+            line_bot_api.push_message(
+                uid,
+                TextSendMessage(text="【每日定時推播】早安！今天也是美好的一天，記得關心天氣與星座運勢喔！☀️")
+            )
+            print(f"成功推播給使用者: {uid}")
+        except Exception as e:
+            print(f"推播給 {uid} 失敗: {e}")
+
+# 設定背景排程器（目前設定每 10 秒測試用，等確定會動後可以改成每天早上固定時間）
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=scheduled_push_to_everyone, trigger="interval", seconds=10)
+scheduler.start()
+
+
+# 3. 處理使用者傳來的文字訊息與全台縣市天氣邏輯
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    # 自動抓取並儲存使用者的 LINE ID
+    user_id = event.source.user_id
+    save_user_id(user_id)
+    
     user_text = event.message.text.strip()
 
-    # --- 天氣查詢邏輯 ---
+    # --- 天氣查詢邏輯（全台縣市） ---
     if "基隆" in user_text:
         reply_text = "【基隆天氣】今日陰雨綿綿，氣溫 20~24°C，出門記得帶傘。"
     elif "台北" in user_text:
@@ -75,7 +104,7 @@ def handle_message(event):
         reply_text = "【馬祖天氣】今日多雲時陰，氣溫 18~22°C，注意保暖。"
     elif "天氣" in user_text:
         reply_text = "【天氣小幫手】你可以直接輸入想查詢的縣市（例如：新竹天氣、苗栗天氣）來查看喔！"
-
+    
     # --- 星座運勢邏輯 ---
     elif "牡羊" in user_text:
         reply_text = "【牡羊座運勢】今日運勢 ★★★★☆！事業運極佳，有機會獲得意外的讚賞！"
@@ -102,17 +131,24 @@ def handle_message(event):
     elif "雙魚" in user_text:
         reply_text = "【雙魚座運勢】今日運勢 ★★★★☆！桃花運上升，保持微笑會帶來好運！"
     elif "星座" in user_text:
-        reply_text = "【星座運勢】請輸入你的星座（例如：巨蟹座、雙子座）來查詢今天的運勢喔！"
-
-    # --- 預設回覆 ---
+        reply_text = "【星座運勢】請輸入你的星座（例如：天蠍座、巨蟹座）來查詢今天的運勢喔！"
     else:
-        reply_text = f"你剛剛說的是：「{user_text}」嗎？你可以輸入「城市天氣」（如：新竹天氣）或「你的星座」（如：天蠍座）來查詢喔！"
+        reply_text = f"你剛剛說的是：「{user_text}」嗎？你可以輸入「縣市天氣」（如：新竹天氣）或「星座」（如：天蠍座）來查詢喔！"
 
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
 
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers.get('X-Line-Signature', '')
+    body = request.get_data(as_text=True)
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    return 'OK'
+
 if __name__ == "__main__":
     app.run(port=5000)
-
